@@ -57,16 +57,19 @@ const Login = () => {
           .join('')
       );
       const decodedToken = JSON.parse(jsonPayload);
+      
+      console.log('Login - Token decoded successfully. Role ID:', decodedToken.role);
 
       // Navigate based on user role from token
       const rolePathMap = {
-        0: '/dashboard/super-admin',
-        1: '/dashboard/admin',
-        2: '/dashboard/teacher',
-        3: '/dashboard/student',
+        1: '/dashboard/super-admin',
+        2: '/dashboard/admin',
+        3: '/dashboard/teacher',
+        4: '/dashboard/student',
       };
 
       const dashboardPath = rolePathMap[decodedToken.role] || '/dashboard/student';
+      console.log('Login - Navigating to dashboard path:', dashboardPath);
       navigate(dashboardPath);
     } catch (err) {
       setError(err.message || 'An error occurred during login');

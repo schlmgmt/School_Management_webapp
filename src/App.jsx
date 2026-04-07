@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -14,7 +13,6 @@ import StudentDashboard from './pages/dashboards/StudentDashboard';
 const Layout = ({ children }) => {
   return (
     <div className="min-h-screen">
-      <Navbar />
       <main>{children}</main>
     </div>
   );

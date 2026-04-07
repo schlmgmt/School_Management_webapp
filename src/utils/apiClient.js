@@ -1,6 +1,67 @@
 import { API_BASE_URL } from '../config/api';
 
 /**
+ * Create a fetch interceptor that handles token refresh
+ * This will be called for all API requests
+ */
+export const createApiFetch = (refreshAccessTokenFn) => {
+  return async (endpoint, options = {}) => {
+    const accessToken = localStorage.getItem('access_token');
+    
+    // Add authorization header
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+    
+    // Make the request
+    let response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+    });
+    
+    console.log(`API ${options.method || 'GET'} ${endpoint} - Status: ${response.status}`);
+    
+    // If token expired (401), try to refresh
+    if (response.status === 401) {
+      console.log('Token expired (401), attempting refresh...');
+      const refreshToken = localStorage.getItem('refresh_token');
+      
+      if (refreshToken && refreshAccessTokenFn) {
+        try {
+          // Call the refresh function from AuthContext
+          const newAccessToken = await refreshAccessTokenFn(refreshToken);
+          console.log('Token refreshed successfully, retrying request...');
+          
+          // Retry original request with new token
+          headers['Authorization'] = `Bearer ${newAccessToken}`;
+          response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers,
+          });
+        } catch (error) {
+          console.error('Token refresh failed:', error);
+          // Refresh failed, will be handled by AuthContext (logout)
+          throw new Error('Session expired. Please login again.');
+        }
+      } else {
+        // No refresh token, redirect to login
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+        throw new Error('Session expired. Please login again.');
+      }
+    }
+    
+    return response;
+  };
+};
+
+/**
  * Make an authenticated API request with automatic token refresh
  * @param {string} endpoint - API endpoint path
  * @param {object} options - Fetch options (method, body, etc.)
@@ -45,6 +106,11 @@ export const apiClient = async (endpoint, options = {}) => {
         if (refreshResponse.ok && refreshData.access_token) {
           // Store new access token
           localStorage.setItem('access_token', refreshData.access_token);
+          
+          // Update refresh token if provided
+          if (refreshData.refresh_token) {
+            localStorage.setItem('refresh_token', refreshData.refresh_token);
+          }
           
           // Retry original request with new token
           headers['Authorization'] = `Bearer ${refreshData.access_token}`;

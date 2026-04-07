@@ -23,7 +23,7 @@ const AdminDashboard = () => {
             </h1>
           </div>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Welcome back, <span className="font-semibold">{user?.name}</span>! Manage your school effectively.
+            Welcome back, john<span className="font-semibold">{user?.name}</span>! Manage your school effectively.
           </p>
         </div>
 
